@@ -1,0 +1,4 @@
+TODO:
+    - Delete account
+
+To fix aspect ratio on raspberryPi, disable "DRM Prime Hardware accelerate"

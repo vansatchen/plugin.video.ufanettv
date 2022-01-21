@@ -1,0 +1,6 @@
+<settings>
+  <category label="Authorization">
+    <setting label="Договор"  type="text" id="loginStr" default=""/>
+    <setting label="Пароль" type="text" id="passStr" default="" option="hidden"/>
+  </category>
+</settings>
