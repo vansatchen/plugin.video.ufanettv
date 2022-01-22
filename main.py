@@ -35,18 +35,13 @@ for cat in getChannels.json():
     TVCHANNELS[cat['name']] = channelFunc(cat['channels'])
 
 
-# Get films and serials
-paramsFilms = {'access_token': accessToken, 'limit': '100'}
-getFilms = requests.get('http://api.ufanet.platform24.tv/v2/programs', params=paramsFilms)
-
-FILMS = {}
-for film in getFilms.json():
-    FILMS[film['title']] = filmFunc(film)
-
-
 CLASSES = {}
 CLASSES['ТВ каналы'] = [TVCHANNELS]
-CLASSES['Фильмы и сериалы'] = [FILMS]
+CLASSES['Фильмы'] = ['films']
+CLASSES['Сериалы'] = ['serials']
+CLASSES['Детям'] = ['children']
+CLASSES['Передачи'] = ['programms']
+CLASSES['Спорт'] = ['sport']
 
 def get_url(**kwargs):
     return '{0}?{1}'.format(_url, urlencode(kwargs))
@@ -60,8 +55,14 @@ def get_categories():
 def get_videos(category):
     return TVCHANNELS[category]
 
-def get_films():
-    return FILMS.keys()
+def get_films(id):
+    # Get films
+    paramsFilms = {'access_token': accessToken, 'limit': '100', 'offset': '0', 'filters': id, 'search': ''}
+    getFilms = requests.get('http://api.ufanet.platform24.tv/v2/programs', params=paramsFilms)
+    FILMS = {}
+    for film in getFilms.json():
+        FILMS[film['title']] = filmFunc(film)
+    return FILMS
 
 def get_views(film):
     paramsView = {'access_token': accessToken}
@@ -76,28 +77,35 @@ def list_classes():
     for classe in classes:
         list_item = xbmcgui.ListItem(label=classe)
         if classe == 'ТВ каналы': url = get_url(action='listTvChannels', classe=classe)
-        elif classe == 'Фильмы и сериалы': url = get_url(action='listFilms', classe=classe)
-#        else: url = get_url(action='listTvChannels', classe=classe)
+        elif classe == 'Фильмы': url = get_url(action='listFilms', classe=classe)
+        elif classe == 'Сериалы': url = get_url(action='listSerials', classe=classe)
+        else: url = get_url(action='listTvChannels', classe=classe)
         is_folder = True
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
-    xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+#    xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+    listitem = xbmcgui.ListItem(label='Профиль')
+    listitem.setProperty('SpecialSort', 'bottom')
+    xbmcplugin.addDirectoryItem(_handle, url, listitem, is_folder)
     xbmcplugin.endOfDirectory(_handle)
 
 
-def listFilms():
+def listFilms(id):
     xbmcplugin.setPluginCategory(_handle, 'Films')
     xbmcplugin.setContent(_handle, 'videos')
     # Get video categories
-    films = get_films()
+    films = get_films(id)
     # Iterate through categories
     for film in films:
-        list_item = xbmcgui.ListItem(label=film)
+        list_item = xbmcgui.ListItem(label=films[film][0]['name'])
         # Set graphics (thumbnail, fanart, banner, poster, landscape etc.) for the list item.
         # Here we use the same image for all items for simplicity's sake.
         # In a real-life plugin you need to set each image accordingly.
-        list_item.setArt({'thumb': FILMS[film][0]['thumb'],
-                          'icon': FILMS[film][0]['thumb'],
-                          'fanart': FILMS[film][0]['thumb']})
+        #list_item.setArt({'thumb': FILMS[film][0]['thumb'],
+        #                  'icon': FILMS[film][0]['thumb'],
+        #                  'fanart': FILMS[film][0]['thumb']})
+        list_item.setArt({'thumb': films[film][0]['thumb'],
+                          'icon': films[film][0]['thumb'],
+                          'fanart': films[film][0]['thumb']})
         # Set additional info for the list item.
         # Here we use a category name for both properties for for simplicity's sake.
         # setInfo allows to set various information for an item.
@@ -109,7 +117,7 @@ def listFilms():
                                     'mediatype': 'video'})
         # Create a URL for a plugin recursive call.
         # Example: plugin://plugin.video.example/?action=listing&category=Animals
-        url = get_url(action='views', film=FILMS[film][0]['id'])
+        url = get_url(action='views', film=films[film][0]['id'])
         # is_folder = True means that this item opens a sub-list of lower level items.
         is_folder = True
         # Add our item to the Kodi virtual folder listing.
@@ -300,7 +308,9 @@ def router(paramstring):
         elif params['action'] == 'listTvChannels':
             listTvChannels()
         elif params['action'] == 'listFilms':
-            listFilms()
+            listFilms(5000)
+        elif params['action'] == 'listSerials':
+            listFilms(6000)
         elif params['action'] == 'views':
             listViews(params['film'])
         elif params['action'] == 'playView':
@@ -311,8 +321,6 @@ def router(paramstring):
             # e.g. typos in action names.
             raise ValueError('Invalid paramstring: {0}!'.format(paramstring))
     else:
-        # If the plugin is called from Kodi UI without any parameters,
-        # display the list of video categories
         list_classes()
 
 if __name__ == '__main__':
