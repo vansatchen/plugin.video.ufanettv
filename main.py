@@ -56,7 +56,6 @@ def get_videos(category):
     return TVCHANNELS[category]
 
 def get_films(id):
-    # Get films
     paramsFilms = {'access_token': accessToken, 'limit': '100', 'offset': '0', 'filters': id, 'search': ''}
     getFilms = requests.get('http://api.ufanet.platform24.tv/v2/programs', params=paramsFilms)
     FILMS = {}
@@ -79,10 +78,12 @@ def list_classes():
         if classe == 'ТВ каналы': url = get_url(action='listTvChannels', classe=classe)
         elif classe == 'Фильмы': url = get_url(action='listFilms', classe=classe)
         elif classe == 'Сериалы': url = get_url(action='listSerials', classe=classe)
+        elif classe == 'Детям': url = get_url(action='listDetyam', classe=classe)
+        elif classe == 'Передачи': url = get_url(action='listPrograms', classe=classe)
+        elif classe == 'Спорт': url = get_url(action='listSport', classe=classe)
         else: url = get_url(action='listTvChannels', classe=classe)
         is_folder = True
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
-#    xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
     listitem = xbmcgui.ListItem(label='Профиль')
     listitem.setProperty('SpecialSort', 'bottom')
     xbmcplugin.addDirectoryItem(_handle, url, listitem, is_folder)
@@ -183,7 +184,7 @@ def listViews(film):
             episode = ""
         else:
             episode = 'S' + str(video['episode']['season']) + 'E' + str(video['episode']['series']) + ' ' + str(video['episode']['title'])
-        list_item.setInfo('video', {'title': video['channel']['name'] + " " + episode,
+        list_item.setInfo('video', {'title': video['channel']['name'] + " " + episode + " " + video['date'] + ' ' + video['time'],
                                     'genre': str(video['program']['category']['name']),
                                     'mediatype': 'video'})
         # Set graphics (thumbnail, fanart, banner, poster, landscape etc.) for the list item.
@@ -311,6 +312,12 @@ def router(paramstring):
             listFilms(5000)
         elif params['action'] == 'listSerials':
             listFilms(6000)
+        elif params['action'] == 'listDetyam':
+            listFilms(7000)
+        elif params['action'] == 'listPrograms':
+            listFilms(8000)
+        elif params['action'] == 'listSport':
+            listFilms(9000)
         elif params['action'] == 'views':
             listViews(params['film'])
         elif params['action'] == 'playView':
