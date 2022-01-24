@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon id="plugin.video.ufanettv"
-version="0.4.0"
+version="0.5.0"
 name="UfanetTV"
 provider-name="PavlovNA">
 <requires>
