@@ -1,15 +1,16 @@
 import sys
 import xbmcgui, xbmcplugin, xbmcaddon, xbmcvfs, xbmc
 import uuid
+import os, random
 import requests
 
-#addonPath = xbmcvfs.translatePath(xbmcaddon.Addon(id='plugin.video.ufanettv').getAddonInfo('path'))
+addonPath = xbmcvfs.translatePath(xbmcaddon.Addon(id='plugin.video.ufanettv').getAddonInfo('path'))
 profilePath = xbmcvfs.translatePath(xbmcaddon.Addon(id='plugin.video.ufanettv').getAddonInfo('profile'))
 
-def checkSettings(_handle):
+def checkSettings(handle):
     # Get credentials from settings
-    contractLogin = xbmcplugin.getSetting(_handle, "loginStr")
-    contractPassword = xbmcplugin.getSetting(_handle, "passStr")
+    contractLogin = xbmcplugin.getSetting(handle, "loginStr")
+    contractPassword = xbmcplugin.getSetting(handle, "passStr")
 
     if not contractLogin or not contractPassword:
         # if settings empty, show warning and settings window
@@ -131,3 +132,9 @@ def filmFunc(filmsData):
         film = [name, thumb, video, genre, id]
         films.append(dict(film))
     return films
+
+
+def randomIcon(path):
+    file = random.choice(os.listdir(path + "/resources/icons/"))
+    filePath = path + '/resources/icons/' + file
+    return filePath
