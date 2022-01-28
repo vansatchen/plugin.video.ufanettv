@@ -1,5 +1,5 @@
 # plugin.video.ufanettv
-KODI video plugin to view ufanettv 
+KODI video plugin to watch ufanettv 
 
 |   Start screen      |     Categories screen      |     Channels screen     |
 |------------|-------------|-------------|
