@@ -3,6 +3,7 @@ TODO:
     - List profile
 
 To fix aspect ratio on raspberryPi, disable "DRM Prime Hardware accelerate"
+listitem.setProperty('AspectRatio', '1.85 : 1')
 
 IDs:
 5000 - Фильмы

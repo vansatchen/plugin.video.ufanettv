@@ -134,7 +134,122 @@ def filmFunc(filmsData):
     return films
 
 
-def randomIcon(path):
-    file = random.choice(os.listdir(path + "/resources/icons/"))
-    filePath = path + '/resources/icons/' + file
-    return filePath
+def thumbForGenre(label):
+    if label == 'Новинки': thumb = addonPath + 'resources/icons/genres/new.png'
+    elif label == 'Зарубежные': thumb = addonPath + 'resources/icons/genres/zarub.png'
+    elif label == 'Российские': thumb = addonPath + 'resources/icons/genres/russian.png'
+    elif label == 'СССР': thumb = addonPath + 'resources/icons/genres/ussr.png'
+    elif label == 'Лучшие' or label == 'Лучшее': thumb = addonPath + 'resources/icons/genres/best.png'
+    elif label == 'Драма': thumb = addonPath + 'resources/icons/genres/drama.png'
+    elif label == 'Комедия': thumb = addonPath + 'resources/icons/genres/comedy.png'
+    elif label == 'Триллер': thumb = addonPath + 'resources/icons/genres/triller.png'
+    elif label == 'Мелодрама': thumb = addonPath + 'resources/icons/genres/heart.png'
+    elif label == 'Детектив': thumb = addonPath + 'resources/icons/genres/detective.png'
+    elif label == 'Фантастика': thumb = addonPath + 'resources/icons/genres/fantastic.png'
+    elif label == 'Фэнтези': thumb = addonPath + 'resources/icons/genres/fantasy.png'
+    elif label == 'Приключения': thumb = addonPath + 'resources/icons/genres/adventure.png'
+    elif label == 'Боевик': thumb = addonPath + 'resources/icons/genres/boevic.png'
+    elif label == 'Военный': thumb = addonPath + 'resources/icons/genres/war.png'
+    elif label == 'Ужасы': thumb = addonPath + 'resources/icons/genres/horror.png'
+    elif label == 'История': thumb = addonPath + 'resources/icons/genres/history.png'
+    elif label == 'Музыка': thumb = addonPath + 'resources/icons/genres/music.png'
+    elif label == 'Документальные': thumb = addonPath + 'resources/icons/genres/documental.png'
+    elif label == 'Мультсериалы': thumb = addonPath + 'resources/icons/genres/documental.png'
+    elif label == 'Мультфильмы': thumb = addonPath + 'resources/icons/genres/documental.png'
+    elif label == 'Сериалы': thumb = addonPath + 'resources/icons/serial.png'
+    elif label == 'Сказка': thumb = addonPath + 'resources/icons/genres/fantasy.png'
+    elif label == 'Фильмы': thumb = addonPath + 'resources/icons/genres/documental.png'
+    elif label == 'Путешествия': thumb = addonPath + 'resources/icons/genres/adventure.png'
+    elif label == 'Юмор': thumb = addonPath + 'resources/icons/genres/comedy.png'
+    else: thumb = addonPath + 'resources/icons/genres/documental.png'
+    return thumb
+
+
+#def randomIcon(path):
+#    file = random.choice(os.listdir(path + "/resources/icons/"))
+#    filePath = path + '/resources/icons/' + file
+#    return filePath
+
+
+#def get_url(**kwargs):
+#    return '{0}?{1}'.format(_url, urlencode(kwargs))
+
+
+#def getTvCats(accessToken):
+#    paramsChan = {"includes": "images.whiteback", "access_token": accessToken}
+#    getChannels = requests.get('http://api.ufanet.platform24.tv/v2/channels/categories', params=paramsChan)
+#    TVCHANNELS = {}
+#    for cat in getChannels.json():
+#        TVCHANNELS[cat['name']] = channelFunc(cat['channels'])
+#    return TVCHANNELS
+
+
+#def getTvVideos(category):
+#    someList = []
+#    someDict = {}
+#    for el in category[2:-1].replace('},', '').replace('}', '').split('{'):
+#        elList = []
+#        for ele in el.replace('\'', '').strip().split(', '):
+#            elList.append(ele.split(': '))
+#        someList.append(dict(elList))
+#    return someList
+
+
+#def getArchViews(film, accessToken):
+#    paramsView = {'access_token': accessToken}
+#    getView = requests.get('http://api.ufanet.platform24.tv/v2/programs/' + film + '/schedule', params=paramsView)
+#    return getView.json()
+
+
+
+# Experiment:
+def showProfile():
+    window = xbmcgui.WindowDialog()
+    window.addControl(xbmcgui.ControlImage(x=25, y=25, width=150, height=150, filename=addonPath + 'resources/icons/profile.png'))
+#    window.doModal()
+    window.show()
+    xbmc.sleep(1000)
+    window.close()
+
+
+def getSearch():
+    searchValue = xbmcgui.Dialog().input('Поиск', type=xbmcgui.INPUT_ALPHANUM)
+    if not searchValue:
+        list_classes()
+    searchResults = []
+    # Get all channels
+    paramsChan = {"includes": "images.whiteback", "access_token": accessToken}
+    getChannels = requests.get('http://api.ufanet.platform24.tv/v2/channels/categories', params=paramsChan)
+    for el in getChannels.json()[0]['channels']:
+        if searchValue.lower() in el['name'].lower():
+            searchResults.append(el)
+    # Search for videos in archive and streams
+    paramsSearch = {'access_token': accessToken, 'text': searchValue}
+    getVideos = requests.get('http://api.ufanet.platform24.tv/v2/search', params=paramsSearch)
+    for ele in getVideos.json():
+        searchResults.append(ele['video'])
+    listSearch(searchResults)
+
+
+def listSearch(results):
+    xbmcplugin.setPluginCategory(_handle, 'Поиск')
+    xbmcplugin.setContent(_handle, 'videos')
+    if not results: return
+    for result in results:
+        try:
+            if result['title']:
+                list_item = xbmcgui.ListItem(label=result['title'] + '    Источник: ' + result['source']['title'])
+                list_item.setInfo('video', {'title': result['title'], 'mediatype': 'video'})
+                list_item.setArt({'thumb': result['img'][0]['src'], 'fanart': result['source']['img']})
+                url = get_url(action='playSubs', sub=result['id'])
+        except: pass
+        try:
+            if result['name']:
+                list_item = xbmcgui.ListItem(label=result['name'])
+                list_item.setInfo('video', {'title': result['name'], 'mediatype': 'video'})
+                url = get_url(action='play', video=result['id'])
+        except: pass
+        list_item.setProperty('IsPlayable', 'true')
+        is_folder = False
+        xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
+    xbmcplugin.endOfDirectory(_handle)
