@@ -171,37 +171,6 @@ def thumbForGenre(label):
 #    return filePath
 
 
-#def get_url(**kwargs):
-#    return '{0}?{1}'.format(_url, urlencode(kwargs))
-
-
-#def getTvCats(accessToken):
-#    paramsChan = {"includes": "images.whiteback", "access_token": accessToken}
-#    getChannels = requests.get('http://api.ufanet.platform24.tv/v2/channels/categories', params=paramsChan)
-#    TVCHANNELS = {}
-#    for cat in getChannels.json():
-#        TVCHANNELS[cat['name']] = channelFunc(cat['channels'])
-#    return TVCHANNELS
-
-
-#def getTvVideos(category):
-#    someList = []
-#    someDict = {}
-#    for el in category[2:-1].replace('},', '').replace('}', '').split('{'):
-#        elList = []
-#        for ele in el.replace('\'', '').strip().split(', '):
-#            elList.append(ele.split(': '))
-#        someList.append(dict(elList))
-#    return someList
-
-
-#def getArchViews(film, accessToken):
-#    paramsView = {'access_token': accessToken}
-#    getView = requests.get('http://api.ufanet.platform24.tv/v2/programs/' + film + '/schedule', params=paramsView)
-#    return getView.json()
-
-
-
 # Experiment:
 def showProfile():
     window = xbmcgui.WindowDialog()

@@ -68,8 +68,8 @@ def getTvCategories():
         TVCHANNELS[cat['name']] = channelFunc(cat['channels'])
     return TVCHANNELS
 
-def getArchFilms(id):
-    paramsFilms = {'access_token': accessToken, 'limit': '100', 'offset': '0', 'filters': id, 'search': ''}
+def getArchFilms(id, count):
+    paramsFilms = {'access_token': accessToken, 'limit': '100', 'offset': count, 'filters': id, 'search': ''}
     getFilms = requests.get('http://api.ufanet.platform24.tv/v2/programs', params=paramsFilms)
     FILMS = {}
     for film in getFilms.json():
@@ -115,16 +115,17 @@ def list_classes():
             xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
             continue
         else: url = get_url(action='listArchCategories', classe=classes[classe])
-        if classe == 'ТВ каналы': list_item.setArt({'thumb': addonPath + 'resources/icons/tv.jpg', 'fanart': defaultFanart})
-        elif classe == 'Фильмы': list_item.setArt({'thumb': addonPath + 'resources/icons/serials.png', 'fanart': defaultFanart})
-        elif classe == 'Сериалы': list_item.setArt({'thumb': addonPath + 'resources/icons/films.png', 'fanart': defaultFanart})
-        elif classe == 'Детям': list_item.setArt({'thumb': addonPath + 'resources/icons/children.png', 'fanart': defaultFanart})
-        elif classe == 'Передачи': list_item.setArt({'thumb': addonPath + 'resources/icons/programs.png', 'fanart': defaultFanart})
-        elif classe == 'Спорт': list_item.setArt({'thumb': addonPath + 'resources/icons/sport.png', 'fanart': defaultFanart})
+        if classe == 'ТВ каналы': image = 'tv.jpg'
+        elif classe == 'Фильмы': image = 'serials.png'
+        elif classe == 'Сериалы': image = 'films.png'
+        elif classe == 'Детям': image = 'children.png'
+        elif classe == 'Передачи': image = 'programs.png'
+        elif classe == 'Спорт': image = 'sport.png'
         elif classe == 'Поиск':
-            list_item.setArt({'thumb': addonPath + 'resources/icons/search.png', 'fanart': defaultFanart})
+            image = 'search.png'
             url = get_url(action='search', classe='search')
-        else: list_item.setArt({'thumb': addonPath + 'resources/icons/tv1.png', 'fanart': defaultFanart})
+        else: image = 'tv1.png'
+        list_item.setArt({'thumb': addonPath + 'resources/icons/' + image, 'fanart': defaultFanart})
         is_folder = True
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
     # List subscriptions
@@ -132,14 +133,15 @@ def list_classes():
     for sub in subs:
         list_item = xbmcgui.ListItem(label=sub)
         url = get_url(action='listSubscriptions', sub=subs[sub])
-        if sub == 'UTV Лучшее': list_item.setArt({'thumb': addonPath + 'resources/icons/utv.png', 'fanart': defaultFanart})
-        elif sub == 'AMEDIATEKA': list_item.setArt({'thumb': addonPath + 'resources/icons/amediateka.png', 'fanart': defaultFanart})
-        elif sub == 'MEGOGO': list_item.setArt({'thumb': addonPath + 'resources/icons/megogo.jpg', 'fanart': defaultFanart})
-        elif sub == 'START': list_item.setArt({'thumb': addonPath + 'resources/icons/start.jpg', 'fanart': defaultFanart})
-        elif sub == 'Живи активно': list_item.setArt({'thumb': addonPath + 'resources/icons/zhiviaktivno.png', 'fanart': defaultFanart})
-        elif sub == 'Шао Сан': list_item.setArt({'thumb': addonPath + 'resources/icons/shaosan.png', 'fanart': defaultFanart})
-        elif sub == 'Dizi': list_item.setArt({'thumb': addonPath + 'resources/icons/dizi.jpg', 'fanart': defaultFanart})
-        else: list_item.setArt({'thumb': addonPath + 'resources/icons/tv1.png', 'fanart': defaultFanart})
+        if sub == 'UTV Лучшее': image = 'utv.png'
+        elif sub == 'AMEDIATEKA': image = 'amediateka.png'
+        elif sub == 'MEGOGO': image = 'megogo.jpg'
+        elif sub == 'START': image = 'start.jpg'
+        elif sub == 'Живи активно': image = 'zhiviaktivno.png'
+        elif sub == 'Шао Сан': image = 'shaosan.png'
+        elif sub == 'Dizi': image = 'dizi.jpg'
+        else: image = 'tv1.png'
+        list_item.setArt({'thumb': addonPath + 'resources/icons/' + image, 'fanart': defaultFanart})
         is_folder = True
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
 #    listitem = xbmcgui.ListItem(label='Профиль')
@@ -164,10 +166,11 @@ def listCats(id, param):
         action = 'listArchFilmsCats'
         xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
     elif param == 'sub':
-        catTitle = 'Содержимое'
+        catTitle = ''
         elements = getSubsCats(id)
         action = 'listSubsCats'
         xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+    xbmcplugin.setPluginCategory(_handle, catTitle)
     xbmcplugin.setContent(_handle, 'videos')
     for element in elements:
         if param == 'tv':
@@ -175,24 +178,27 @@ def listCats(id, param):
             thumb = elements[element][0]['thumb']
             name = elements[element][0]['name']
             elem = elements[element]
+            genre = element
         else:
             label = element['name']
             thumb = thumbForGenre(label)
             name = element['name']
             elem = element['id']
+            genre = element['name']
         list_item = xbmcgui.ListItem(label=label)
         list_item.setArt({'thumb': thumb, 'icon': thumb, 'fanart': thumb})
-        list_item.setInfo('video', {'title': name, 'genre': name, 'mediatype': 'video'})
+        list_item.setInfo('video', {'title': name, 'genre': genre, 'mediatype': 'video'})
         url = get_url(action=action, el=elem)
         is_folder = True
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
     xbmcplugin.endOfDirectory(_handle)
 
 
-def listArchFilms(id):
-    xbmcplugin.setPluginCategory(_handle, 'Films')
+def listArchFilms(id, countStart):
+    xbmcplugin.setPluginCategory(_handle, 'Архив')
     xbmcplugin.setContent(_handle, 'videos')
-    films = getArchFilms(id)
+    films = getArchFilms(id, countStart)
+    countEnd = int(countStart)
     for film in films:
         list_item = xbmcgui.ListItem(label=films[film][0]['name'])
         list_item.setArt({'thumb': films[film][0]['thumb'], 'icon': films[film][0]['thumb'], 'fanart': films[film][0]['thumb']})
@@ -200,18 +206,26 @@ def listArchFilms(id):
         url = get_url(action='archViews', film=films[film][0]['id'])
         is_folder = True
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
+        countEnd += 1
     xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
+    if countEnd - int(countStart) >= 100:
+        # Next page
+        listitem = xbmcgui.ListItem(label='Следующая страница')
+        listitem.setProperty('SpecialSort', 'bottom')
+        is_folder = True
+        url = get_url(action='nextPage', act=id + ' ' + str(countEnd))
+        xbmcplugin.addDirectoryItem(_handle, url, listitem, is_folder)
     xbmcplugin.endOfDirectory(_handle)
 
 
 # Total
 def listVideos(id, param):
     if param == 'sub':
-        listTitle = 'Выпуски'
         elements = getSubsFilms(id)
+        listTitle = ''
     elif param == 'arch':
-        listTitle = 'Архив'
         elements = getArchViews(id)
+        listTitle = str(elements[0]['program']['title'])
     elif param == 'tv':
         listTitle = 'ТВ-каналы'
         elements = get_videos(id)
@@ -288,7 +302,7 @@ def router(paramstring):
         elif params['action'] == 'listArchCategories':
             listCats(params['classe'], 'arch')
         elif params['action'] == 'listArchFilmsCats':
-            listArchFilms(params['el'])
+            listArchFilms(params['el'], 0)
         elif params['action'] == 'archViews':
             listVideos(params['film'], 'arch')
         elif params['action'] == 'playArch':
@@ -300,6 +314,9 @@ def router(paramstring):
             listVideos(params['el'], 'sub')
         elif params['action'] == 'playSubs':
             play_video(params['el'], 'sub')
+
+        elif params['action'] == 'nextPage':
+            listArchFilms(params['act'].split(' ')[0], params['act'].split(' ')[1])
 
         elif params['action'] == 'search':
             getSearch()
