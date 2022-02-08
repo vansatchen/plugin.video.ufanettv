@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon id="plugin.video.ufanettv"
-version="0.6.1"
+version="0.6.3"
 name="UfanetTV"
 provider-name="PavlovNA">
 <requires>
   <import addon="xbmc.python" version="3.0.0"/>
   <import addon="script.module.requests" version="2.9.1"/>
-  <import addon="script.module.web-pdb" />
 </requires>
 <extension point="xbmc.python.pluginsource" library="main.py">
   <provides>video</provides>
@@ -14,7 +13,7 @@ provider-name="PavlovNA">
 <extension point="xbmc.addon.metadata">
   <summary lang="en">UfanetTV Video Plugin</summary>
   <description lang="en_GB">UfanetTV video plugin for Kodi mediacenter.</description>
-  <disclaimer lang="en_GB">Alfa version.</disclaimer>
+  <disclaimer lang="en_GB">Beta version.</disclaimer>
   <assets>
     <icon>resources/icon.jpg</icon>
     <fanart>resources/fanart.png</fanart>

@@ -1,5 +1,5 @@
-import sys
-from urllib.parse import urlencode, parse_qsl
+import sys, ast
+from urllib.parse import urlencode, parse_qsl, unquote
 import xbmcgui, xbmcplugin, xbmcaddon, xbmcvfs
 import requests
 from resources.functions import *
@@ -18,6 +18,9 @@ elementsCount = int(xbmcplugin.getSetting(_handle, "elementsCount"))
 checkSettings(_handle)
 # Get deviceID
 deviceID = checkDeviceID(_handle)
+
+# Search flag
+isSearch = True
 
 # Get token
 getToken = requests.post('http://api.ufanet.platform24.tv/v2/auth/device', json={"device_id": deviceID})
@@ -80,8 +83,8 @@ def getArchFilms(id, count):
         FILMS[film['title']] = filmFunc(film)
     return FILMS
 
-def getSubsFilms(id):
-    paramsSubs = {'access_token': accessToken, 'limit': '100', 'offset': '0', 'filters': id, 'search': ''}
+def getSubsFilms(id, count):
+    paramsSubs = {'access_token': accessToken, 'limit': elementsCount, 'offset': count, 'filters': id, 'search': ''}
     getSubs = requests.get('http://api.ufanet.platform24.tv/v2/videos', params=paramsSubs)
     SUBS = {}
     for sub in getSubs.json():
@@ -89,12 +92,7 @@ def getSubsFilms(id):
     return SUBS
 
 def get_videos(category):
-    someList = []
-    for el in category[2:-1].replace('},', '').replace('}', '').split('{'):
-        elList = []
-        for ele in el.replace('\'', '').strip().split(', '):
-            elList.append(ele.split(': '))
-        someList.append(dict(elList))
+    someList = ast.literal_eval(category)
     return someList
 
 def getArchViews(film):
@@ -127,7 +125,7 @@ def list_classes():
         elif classe == 'Спорт': image = 'sport.png'
         elif classe == 'Поиск':
             image = 'search.png'
-            url = get_url(action='search', classe='search')
+            url = get_url(action='search', flag=True)
         else: image = 'tv1.png'
         list_item.setArt({'thumb': addonPath + 'resources/icons/' + image, 'fanart': defaultFanart})
         is_folder = True
@@ -217,15 +215,15 @@ def listArchFilms(id, countStart):
         listitem = xbmcgui.ListItem(label='Следующая страница')
         listitem.setProperty('SpecialSort', 'bottom')
         is_folder = True
-        url = get_url(action='nextPage', act=id + ' ' + str(countEnd))
+        url = get_url(action='nextPageArch', act=id, count=str(countEnd))
         xbmcplugin.addDirectoryItem(_handle, url, listitem, is_folder)
     xbmcplugin.endOfDirectory(_handle)
 
 
 # Total
-def listVideos(id, param):
+def listVideos(id, param, countStart):
     if param == 'sub':
-        elements = getSubsFilms(id)
+        elements = getSubsFilms(id, countStart)
         listTitle = ''
     elif param == 'arch':
         elements = getArchViews(id)
@@ -235,6 +233,7 @@ def listVideos(id, param):
         elements = get_videos(id)
     xbmcplugin.setPluginCategory(_handle, listTitle)
     xbmcplugin.setContent(_handle, 'videos')
+    countEnd = int(countStart)
     for element in elements:
         if param == 'sub':
             list_item = xbmcgui.ListItem(label=elements[element][0]['name'])
@@ -242,6 +241,7 @@ def listVideos(id, param):
             thumb = elements[element][0]['thumb']
             el = elements[element][0]['id']
             action = 'playSubs'
+            countEnd += 1
         elif param == 'arch':
             list_item = xbmcgui.ListItem(label=element['channel']['name'])
             if element['episode'] is None:
@@ -265,6 +265,15 @@ def listVideos(id, param):
         url = get_url(action=action, el=el)
         is_folder = False
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
+
+    if countEnd - int(countStart) >= elementsCount and param == 'sub':
+        # Next page
+        listitem = xbmcgui.ListItem(label='Следующая страница')
+        listitem.setProperty('SpecialSort', 'bottom')
+        is_folder = True
+        url = get_url(action='nextPageSub', act=id, count=str(countEnd))
+        xbmcplugin.addDirectoryItem(_handle, url, listitem, is_folder)
+
     xbmcplugin.endOfDirectory(_handle)
 
 
@@ -299,7 +308,7 @@ def router(paramstring):
         if params['action'] == 'listTvChannels':
             listCats(0, 'tv')
         elif params['action'] == 'listTvCats':
-            listVideos(params['el'], 'tv')
+            listVideos(params['el'], 'tv', 0)
         elif params['action'] == 'playTv':
             play_video(params['el'], '0')
 
@@ -308,19 +317,21 @@ def router(paramstring):
         elif params['action'] == 'listArchFilmsCats':
             listArchFilms(params['el'], 0)
         elif params['action'] == 'archViews':
-            listVideos(params['film'], 'arch')
+            listVideos(params['film'], 'arch', 0)
         elif params['action'] == 'playArch':
             play_video(params['el'], 'arch')
 
         elif params['action'] == 'listSubscriptions':
             listCats(params['sub'], 'sub')
         elif params['action'] == 'listSubsCats':
-            listVideos(params['el'], 'sub')
+            listVideos(params['el'], 'sub', 0)
         elif params['action'] == 'playSubs':
             play_video(params['el'], 'sub')
 
-        elif params['action'] == 'nextPage':
-            listArchFilms(params['act'].split(' ')[0], params['act'].split(' ')[1])
+        elif params['action'] == 'nextPageArch':
+            listArchFilms(params['act'], params['count'])
+        elif params['action'] == 'nextPageSub':
+            listVideos(params['act'], 'sub', params['count'])
 
         elif params['action'] == 'search':
             getSearch()
