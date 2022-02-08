@@ -10,6 +10,10 @@ _url = sys.argv[0]
 _handle = int(sys.argv[1])
 addonPath = xbmcvfs.translatePath(xbmcaddon.Addon(id='plugin.video.ufanettv').getAddonInfo('path'))
 defaultImage = addonPath + 'resources/tv.png'
+
+# Get elements data from settings
+elementsCount = int(xbmcplugin.getSetting(_handle, "elementsCount"))
+
 # Check that login and password available
 checkSettings(_handle)
 # Get deviceID
@@ -69,7 +73,7 @@ def getTvCategories():
     return TVCHANNELS
 
 def getArchFilms(id, count):
-    paramsFilms = {'access_token': accessToken, 'limit': '100', 'offset': count, 'filters': id, 'search': ''}
+    paramsFilms = {'access_token': accessToken, 'limit': elementsCount, 'offset': count, 'filters': id, 'search': ''}
     getFilms = requests.get('http://api.ufanet.platform24.tv/v2/programs', params=paramsFilms)
     FILMS = {}
     for film in getFilms.json():
@@ -208,7 +212,7 @@ def listArchFilms(id, countStart):
         xbmcplugin.addDirectoryItem(_handle, url, list_item, is_folder)
         countEnd += 1
     xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE)
-    if countEnd - int(countStart) >= 100:
+    if countEnd - int(countStart) >= elementsCount:
         # Next page
         listitem = xbmcgui.ListItem(label='Следующая страница')
         listitem.setProperty('SpecialSort', 'bottom')

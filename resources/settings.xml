@@ -1,6 +1,9 @@
 <settings>
-  <category label="Authorization">
-    <setting label="Договор"  type="text" id="loginStr" default=""/>
+  <category label="Авторизация">
+    <setting label="Договор" type="text" id="loginStr" default=""/>
     <setting label="Пароль" type="text" id="passStr" default="" option="hidden"/>
+  </category>
+  <category label="Вид">
+    <setting label="Количество элементов на странице архива" type="labelenum" id="elementsCount" values="20|30|40|50" default="50"/>
   </category>
 </settings>
