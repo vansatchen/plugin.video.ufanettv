@@ -20,7 +20,7 @@ checkSettings(_handle)
 deviceID = checkDeviceID(_handle)
 
 # Search flag
-isSearch = True
+isSearch = ''
 
 # Get token
 getToken = requests.post('http://api.ufanet.platform24.tv/v2/auth/device', json={"device_id": deviceID})
@@ -125,7 +125,7 @@ def list_classes():
         elif classe == 'Спорт': image = 'sport.png'
         elif classe == 'Поиск':
             image = 'search.png'
-            url = get_url(action='search', flag=True)
+            url = get_url(action='search', act=True)
         else: image = 'tv1.png'
         list_item.setArt({'thumb': addonPath + 'resources/icons/' + image, 'fanart': defaultFanart})
         is_folder = True
@@ -276,28 +276,18 @@ def listVideos(id, param, countStart):
 
     xbmcplugin.endOfDirectory(_handle)
 
-
 # Total
-def play_video(id, param):
-    if param == 'arch':
-        paramsVideo = {"access_token": accessToken, "ts": id.split()[1]}
-        id = id.split()[0]
-        path = 'channels/'
-    elif param == 'sub':
-        paramsVideo = {"access_token": accessToken}
-        path = 'videos/'
-    else:
-        paramsVideo = {"access_token": accessToken, "ts": param}
-        path = 'channels/'
-    urlJson = requests.get('http://api.ufanet.platform24.tv/v2/' + path + id + '/stream', params=paramsVideo)
-    try:
-        if urlJson.json()['error']:
-            xbmcgui.Dialog().ok('Внимание!', str(urlJson.json()['error']['message']))
-            return
-    except:
-        url = urlJson.json()['hls']
-    play_item = xbmcgui.ListItem(path=url)
-    xbmcplugin.setResolvedUrl(_handle, True, listitem=play_item)
+class PlayVideo:
+    def __init__(self, id, paramsVideo, path = 'channels/'):
+        urlJson = requests.get('http://api.ufanet.platform24.tv/v2/' + path + id + '/stream', params=paramsVideo)
+        try:
+            if urlJson.json()['error']:
+                xbmcgui.Dialog().ok('Внимание!', str(urlJson.json()['error']['message']))
+                return
+        except:
+            url = urlJson.json()['hls']
+        play_item = xbmcgui.ListItem(path=url)
+        xbmcplugin.setResolvedUrl(_handle, True, listitem=play_item)
 
 
 def router(paramstring):
@@ -310,7 +300,7 @@ def router(paramstring):
         elif params['action'] == 'listTvCats':
             listVideos(params['el'], 'tv', 0)
         elif params['action'] == 'playTv':
-            play_video(params['el'], '0')
+            PlayVideo(params['el'], {"access_token": accessToken, "ts": '0'})
 
         elif params['action'] == 'listArchCategories':
             listCats(params['classe'], 'arch')
@@ -319,14 +309,14 @@ def router(paramstring):
         elif params['action'] == 'archViews':
             listVideos(params['film'], 'arch', 0)
         elif params['action'] == 'playArch':
-            play_video(params['el'], 'arch')
+            PlayVideo(params['el'].split()[0], {"access_token": accessToken, "ts": params['el'].split()[1]})
 
         elif params['action'] == 'listSubscriptions':
             listCats(params['sub'], 'sub')
         elif params['action'] == 'listSubsCats':
             listVideos(params['el'], 'sub', 0)
         elif params['action'] == 'playSubs':
-            play_video(params['el'], 'sub')
+            PlayVideo(params['el'], {"access_token": accessToken}, 'videos/')
 
         elif params['action'] == 'nextPageArch':
             listArchFilms(params['act'], params['count'])
@@ -334,7 +324,7 @@ def router(paramstring):
             listVideos(params['act'], 'sub', params['count'])
 
         elif params['action'] == 'search':
-            getSearch()
+            getSearchText()
         elif params['action'] == 'listProfile':
             showProfile()
         else:
